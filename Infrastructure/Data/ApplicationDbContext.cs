@@ -1,0 +1,109 @@
+﻿using Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
+namespace Infrastructure.Data
+{
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
+        {
+        }
+
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<Enrollment> Enrollments { get; set; }
+        public DbSet<Lesson> Lessons { get; set; }
+        public DbSet<LessonProgress> LessonProgresses { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            // ApplicationUser Configuration
+            builder.Entity<ApplicationUser>(entity =>
+            {
+                entity.HasIndex(e => e.UserName).IsUnique();
+                entity.HasIndex(e => e.Email).IsUnique();
+                entity.HasIndex(e => e.PhoneNumber).IsUnique();
+            });
+
+            // Course Configuration
+            builder.Entity<Course>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.Description).IsRequired();
+                entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.DiscountPercentage).HasColumnType("decimal(5,2)");
+
+                entity.HasOne(e => e.Instructor)
+                    .WithMany(u => u.Courses)
+                    .HasForeignKey(e => e.InstructorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Lesson Configuration
+            builder.Entity<Lesson>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+                entity.Property(e => e.VideoUrl).IsRequired();
+
+                entity.HasOne(e => e.Course)
+                    .WithMany(c => c.Lessons)
+                    .HasForeignKey(e => e.CourseId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Enrollment Configuration
+            builder.Entity<Enrollment>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.PaidAmount).HasColumnType("decimal(18,2)");
+
+                entity.HasOne(e => e.Student)
+                    .WithMany(u => u.Enrollments)
+                    .HasForeignKey(e => e.StudentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Course)
+                    .WithMany(c => c.Enrollments)
+                    .HasForeignKey(e => e.CourseId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => new { e.StudentId, e.CourseId }).IsUnique();
+            });
+
+            // LessonProgress Configuration
+            builder.Entity<LessonProgress>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+
+                entity.HasOne(e => e.Student)
+                    .WithMany(u => u.LessonProgresses)
+                    .HasForeignKey(e => e.StudentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(e => e.Lesson)
+                    .WithMany(l => l.LessonProgresses)
+                    .HasForeignKey(e => e.LessonId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => new { e.StudentId, e.LessonId }).IsUnique();
+            });
+
+            builder.Entity<Review>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.ImageUrl).IsRequired();
+                entity.Property(e => e.OrderIndex).HasDefaultValue(0);
+                entity.Property(e => e.IsActive).HasDefaultValue(true);
+                entity.Property(e => e.StudentName).HasMaxLength(50);
+                entity.Property(e => e.Description).HasMaxLength(500);
+            });
+        }
+    }
+}
