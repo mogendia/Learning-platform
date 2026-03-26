@@ -17,6 +17,9 @@ namespace Infrastructure.Repositories
         public IEnrollmentRepository Enrollments { get; }
         public ILessonProgressRepository LessonProgresses { get; }
         public IReviewRepository Reviews { get; }
+        public ILiveSessionRepository LiveSessions { get; }
+        public ILiveQuestionRepository LiveQuestions { get; }
+        public ILiveParticipantRepository LiveParticipants { get; }
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -26,6 +29,9 @@ namespace Infrastructure.Repositories
             Enrollments = new EnrollmentRepository(_context);
             LessonProgresses = new LessonProgressRepository(_context);
             Reviews = new ReviewRepository(_context);
+            LiveSessions = new LiveSessionRepository(_context);
+            LiveQuestions = new LiveQuestionRepository(_context);
+            LiveParticipants = new LiveParticipantRepository(_context);
         }
 
         public async Task<int> SaveAsync()

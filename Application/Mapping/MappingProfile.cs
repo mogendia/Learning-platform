@@ -1,4 +1,4 @@
-﻿using Application.DTOs.Course;
+using Application.DTOs.Course;
 using Application.DTOs.Dashboard;
 using Application.DTOs.Lesson;
 using Application.DTOs.Review;
@@ -93,6 +93,8 @@ namespace Application.Mapping
                     opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.CourseTitle,
                     opt => opt.MapFrom(src => src.Title))
+                .ForMember(dest => dest.CoverImageUrl,
+                    opt => opt.MapFrom(src => src.CoverImageUrl))
                 .ForMember(dest => dest.TotalEnrolled,
                     opt => opt.MapFrom(src => src.Enrollments.Count))
                 //.ForMember(dest => dest.Revenue,

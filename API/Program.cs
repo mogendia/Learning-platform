@@ -1,4 +1,4 @@
-﻿using Application.ImpServices;
+using Application.ImpServices;
 using Application.Interfaces;
 using Application.Mapping;
 using Application.Services;
@@ -16,6 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 // Configure DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -71,32 +72,35 @@ builder.Services.AddScoped<ILessonService, LessonService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<ILiveSessionService, LiveSessionService>();
+builder.Services.AddScoped<ILiveQuestionService, LiveQuestionService>();
+builder.Services.AddScoped<ILiveTokenService, LiveTokenService>();
+builder.Services.AddScoped<ILiveSessionNotifier, API.Hubs.LiveSessionNotifier>();
 
 
-// builder.Services.AddHttpClient<IPaymentService, PaymobService>();
+//builder.Services.AddHttpClient<IPaymentService, PaymobService>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
         policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
-
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Seed the database
 var app = builder.Build();
 
 try
 {
-    using (var scope = app.Services.CreateScope())
-    {
+using (var scope = app.Services.CreateScope())
+{
         await Infrastructure.Data.SeedData.SeedDatabaseAsync(scope.ServiceProvider);
     }
 }
@@ -113,10 +117,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<API.Hubs.LiveSessionHub>("/hubs/live-session");
 
 app.Run();

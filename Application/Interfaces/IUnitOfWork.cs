@@ -13,6 +13,9 @@ namespace Application.Interfaces
         IEnrollmentRepository Enrollments { get; }
         ILessonProgressRepository LessonProgresses { get; }
         IReviewRepository Reviews { get; }
+        ILiveSessionRepository LiveSessions { get; }
+        ILiveQuestionRepository LiveQuestions { get; }
+        ILiveParticipantRepository LiveParticipants { get; }
         Task<int> SaveAsync();
     }
 }

@@ -17,6 +17,9 @@ namespace Infrastructure.Data
         public DbSet<Lesson> Lessons { get; set; }
         public DbSet<LessonProgress> LessonProgresses { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<LiveSession> LiveSessions { get; set; }
+        public DbSet<LiveQuestion> LiveQuestions { get; set; }
+        public DbSet<LiveParticipant> LiveParticipants { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -103,6 +106,68 @@ namespace Infrastructure.Data
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
                 entity.Property(e => e.StudentName).HasMaxLength(50);
                 entity.Property(e => e.Description).HasMaxLength(500);
+            });
+
+            builder.Entity<LiveSession>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.SessionId).IsRequired();
+                entity.Property(e => e.StreamRoomId).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.Status).HasConversion<int>();
+
+                entity.HasAlternateKey(e => e.SessionId);
+
+                entity.HasOne(e => e.Course)
+                    .WithMany()
+                    .HasForeignKey(e => e.CourseId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Instructor)
+                    .WithMany()
+                    .HasForeignKey(e => e.InstructorId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.SessionId).IsUnique();
+            });
+
+            builder.Entity<LiveQuestion>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.QuestionId).IsRequired();
+                entity.Property(e => e.Status).HasConversion<int>();
+                entity.Property(e => e.Message).HasMaxLength(500);
+
+                entity.HasOne(e => e.Session)
+                    .WithMany(s => s.Questions)
+                    .HasForeignKey(e => e.SessionId)
+                    .HasPrincipalKey(s => s.SessionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Student)
+                    .WithMany()
+                    .HasForeignKey(e => e.StudentId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.QuestionId).IsUnique();
+            });
+
+            builder.Entity<LiveParticipant>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Role).HasConversion<int>();
+
+                entity.HasOne(e => e.Session)
+                    .WithMany(s => s.Participants)
+                    .HasForeignKey(e => e.SessionId)
+                    .HasPrincipalKey(s => s.SessionId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.User)
+                    .WithMany()
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => new { e.SessionId, e.UserId }).IsUnique();
             });
         }
     }

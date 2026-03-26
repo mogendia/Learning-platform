@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +10,7 @@ namespace Application.DTOs.Dashboard
     {
         public int CourseId { get; set; }
         public string CourseTitle { get; set; }
+        public string CoverImageUrl { get; set; }
         public int TotalEnrolled { get; set; }
         public decimal Revenue { get; set; }
         public List<StudentProgressDto> Students { get; set; }
